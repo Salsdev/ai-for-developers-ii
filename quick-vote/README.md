@@ -1,17 +1,18 @@
 # QuickVote – Modern Polling Application
 
-QuickVote is a modern, open-source polling app built with Next.js, Shadcn UI, and Tailwind CSS. It allows users to easily create, manage, and participate in polls with a fast, responsive, and intuitive interface. The project is designed for scalability, maintainability, and seamless integration with backend services.
+QuickVote is a modern, open-source polling app built with Next.js, Shadcn UI, and Tailwind CSS. It enables users to easily create, manage, and participate in polls with a fast, responsive, and intuitive interface. The project is designed for scalability, maintainability, and seamless integration with backend services.
 
 ---
 
 ## 🚀 Features
 
-- **User Authentication**: Secure login and registration (mocked, ready for real backend integration)
+- **User Authentication**: Secure login, registration, password reset, and forgot password flows powered by Supabase Auth
 - **Poll Creation**: Easily create polls with multiple options and rich descriptions
 - **Live Voting**: Vote in real time and see instant, auto-updating results
 - **User Dashboard**: Personalized dashboard with poll stats and quick actions
+- **Password Reset**: Users can request a password reset link and set a new password via email
 - **Responsive Design**: Fully optimized for mobile, tablet, and desktop with Tailwind CSS
-- **Modern UI**: Clean, accessible interface powered by Shadcn UI components
+- **Modern UI**: Clean, accessible interface powered by Shadcn UI components.
 
 ---
 
@@ -28,7 +29,7 @@ QuickVote is a modern, open-source polling app built with Next.js, Shadcn UI, an
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/Salsdev/ai-for-developers-ii/tree/main/quick-vote
+   git clone https://github.com/Salsdev/ai-for-developers-ii.git
    cd quick-vote
    ```
 
@@ -39,14 +40,17 @@ QuickVote is a modern, open-source polling app built with Next.js, Shadcn UI, an
    yarn install
    ```
 
-3. **Run the development server:**
+3. **Set up environment variables:**
+   - Copy `.env.example` to `.env.local` and fill in your Supabase credentials.
+
+4. **Run the development server:**
    ```bash
    npm run dev
    # or
    yarn dev
    ```
 
-4. **Open your browser and visit:**
+5. **Open your browser and visit:**
    ```
    http://localhost:3000
    ```
@@ -56,7 +60,12 @@ QuickVote is a modern, open-source polling app built with Next.js, Shadcn UI, an
 #### Creating an Account / Logging In
 
 - Click the **Login** or **Register** button on the homepage.
-- Enter your credentials. (Note: Authentication is mocked by default; no real backend is connected.)
+- Enter your credentials. Authentication is now powered by Supabase Auth.
+
+#### Forgot Password / Reset Password
+
+- On the login page, click **Forgot Password** to request a reset link.
+- Check your email for a reset link and follow the instructions to set a new password.
 
 #### Creating a Poll
 
@@ -80,7 +89,7 @@ QuickVote is a modern, open-source polling app built with Next.js, Shadcn UI, an
 
 ### 3. Customization & Integration
 
-- The app is ready for integration with real authentication and backend services.
+- The app is ready for integration with real authentication and backend services (Supabase is used by default).
 - UI is fully customizable via Tailwind CSS and Shadcn UI components.
 
 ---

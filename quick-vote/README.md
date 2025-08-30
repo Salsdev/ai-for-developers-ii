@@ -1,0 +1,21 @@
+# QuickVote – Modern Polling Application
+
+QuickVote is a modern, open-source polling app built with Next.js, Shadcn UI, and Tailwind CSS. It allows users to easily create, manage, and participate in polls with a fast, responsive, and intuitive interface. The project is designed for scalability, maintainability, and seamless integration with backend services.
+
+---
+
+## 🚀 Features
+
+- **User Authentication**: Secure login and registration (mocked, ready for real backend integration)
+- **Poll Creation**: Easily create polls with multiple options and rich descriptions
+- **Live Voting**: Vote in real time and see instant, auto-updating results
+- **User Dashboard**: Personalized dashboard with poll stats and quick actions
+- **Responsive Design**: Fully optimized for mobile, tablet, and desktop with Tailwind CSS
+- **Modern UI**: Clean, accessible interface powered by Shadcn UI components
+
+---
+
+## 🗂 Project Structure
+
+<details>
+<summary>Click to expand</summary>

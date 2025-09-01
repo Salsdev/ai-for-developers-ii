@@ -1,128 +1,192 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { usePolls } from '@/hooks/usePolls'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { usePolls } from "@/hooks/usePolls";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function EditPollForm({ pollId }) {
-  const router = useRouter()
-  const { editPoll, getPollById, isLoading } = usePolls()
+  const router = useRouter();
+  const { editPoll, isLoading } = usePolls();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    options: ['', '']
-  })
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+    title: "",
+    description: "",
+    options: ["", ""],
+  });
+  const [poll, setPoll] = useState(null);
+  const [loadingPoll, setLoadingPoll] = useState(true);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    const poll = getPollById(pollId)
-    if (poll) {
-      setFormData({
-        title: poll.title,
-        description: poll.description,
-        options: poll.options.map(option => option.text)
-      })
+    const fetchPollData = async () => {
+      try {
+        setLoadingPoll(true);
+        console.log("Fetching poll data for ID:", pollId);
+        const response = await fetch(`/api/polls/${pollId}`);
+        const data = await response.json();
+
+        console.log("API Response:", data);
+
+        if (response.ok && data.success) {
+          const pollData = data.poll;
+          setPoll(pollData);
+
+          // Check if user owns this poll
+          if (pollData.created_by !== user?.id) {
+            setErrors({
+              access: "You do not have permission to edit this poll",
+            });
+            return;
+          }
+
+          setFormData({
+            title: pollData.title,
+            description: pollData.description,
+            options: pollData.poll_options?.map((option) => option.text) ||
+              pollData.options?.map((option) => option.text) || ["", ""],
+          });
+        } else {
+          setErrors({ load: data.error || "Failed to load poll data" });
+        }
+      } catch (error) {
+        console.error("Error fetching poll:", error);
+        setErrors({ load: "Failed to load poll data" });
+      } finally {
+        setLoadingPoll(false);
+      }
+    };
+
+    if (pollId && user) {
+      fetchPollData();
     }
-  }, [pollId, getPollById])
+  }, [pollId, user]);
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  }
+  };
 
   const handleOptionChange = (index, value) => {
-    const newOptions = [...formData.options]
-    newOptions[index] = value
-    setFormData(prev => ({ ...prev, options: newOptions }))
-    
+    const newOptions = [...formData.options];
+    newOptions[index] = value;
+    setFormData((prev) => ({ ...prev, options: newOptions }));
+
     if (errors[`option${index}`]) {
-      setErrors(prev => ({ ...prev, [`option${index}`]: '' }))
+      setErrors((prev) => ({ ...prev, [`option${index}`]: "" }));
     }
-  }
+  };
 
   const addOption = () => {
     if (formData.options.length < 10) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        options: [...prev.options, '']
-      }))
+        options: [...prev.options, ""],
+      }));
     }
-  }
+  };
 
   const removeOption = (index) => {
+    console.log("Attempting to remove option at index:", index);
+    console.log("Current options:", formData.options);
+    console.log("Options length:", formData.options.length);
+
     if (formData.options.length > 2) {
-      const newOptions = formData.options.filter((_, i) => i !== index)
-      setFormData(prev => ({ ...prev, options: newOptions }))
-      
+      const newOptions = formData.options.filter((_, i) => i !== index);
+      console.log("New options after removal:", newOptions);
+      setFormData((prev) => ({ ...prev, options: newOptions }));
+
       // Clear error for removed option
-      const newErrors = { ...errors }
-      delete newErrors[`option${index}`]
-      setErrors(newErrors)
+      const newErrors = { ...errors };
+      delete newErrors[`option${index}`];
+      setErrors(newErrors);
+    } else {
+      console.log("Cannot remove - minimum 2 options required");
     }
-  }
+  };
 
   const validateForm = () => {
-    const newErrors = {}
+    const newErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Poll title is required'
+      newErrors.title = "Poll title is required";
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Poll description is required'
+      newErrors.description = "Poll description is required";
     }
 
-    const validOptions = formData.options.filter(option => option.trim() !== '')
+    const validOptions = formData.options.filter(
+      (option) => option.trim() !== "",
+    );
     if (validOptions.length < 2) {
-      newErrors.options = 'At least 2 options are required'
+      newErrors.options = "At least 2 options are required";
     }
 
     formData.options.forEach((option, index) => {
-      if (option.trim() === '') {
-        newErrors[`option${index}`] = 'Option cannot be empty'
+      if (option.trim() === "") {
+        newErrors[`option${index}`] = "Option cannot be empty";
       }
-    })
+    });
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setIsSubmitting(true)
-    
+    setIsSubmitting(true);
+    setErrors({});
+    setSuccessMessage("");
+
     try {
-      const result = await editPoll(pollId, {
+      const submitData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        options: formData.options.filter(option => option.trim() !== '')
-      })
+        options: formData.options.filter((option) => option.trim() !== ""),
+      };
+
+      console.log("Submitting poll data:", submitData);
+      console.log("Form options before filtering:", formData.options);
+      console.log("Valid options after filtering:", submitData.options);
+
+      const result = await editPoll(pollId, submitData);
 
       if (result.success) {
-        router.push('/polls')
+        setSuccessMessage(result.message || "Poll updated successfully!");
+        setTimeout(() => {
+          router.push("/polls");
+        }, 1500);
       } else {
-        setErrors({ submit: result.error || 'Failed to update poll' })
+        setErrors({ submit: result.error || "Failed to update poll" });
       }
     } catch (error) {
-      setErrors({ submit: 'An unexpected error occurred' })
+      setErrors({ submit: "An unexpected error occurred" });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  if (isLoading) {
+  if (loadingPoll) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
@@ -130,13 +194,51 @@ export default function EditPollForm({ pollId }) {
           <p className="text-gray-600">Loading poll data...</p>
         </div>
       </div>
-    )
+    );
+  }
+
+  if (errors.access) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-500 text-6xl mb-4">🔒</div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          Access Denied
+        </h3>
+        <p className="text-gray-600 mb-6">{errors.access}</p>
+        <Button
+          onClick={() => router.push("/polls")}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          Back to Polls
+        </Button>
+      </div>
+    );
+  }
+
+  if (errors.load) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-500 text-6xl mb-4">⚠️</div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          Error Loading Poll
+        </h3>
+        <p className="text-gray-600 mb-6">{errors.load}</p>
+        <Button
+          onClick={() => router.push("/polls")}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          Back to Polls
+        </Button>
+      </div>
+    );
   }
 
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-gray-900">Edit Poll</CardTitle>
+        <CardTitle className="text-2xl font-bold text-gray-900">
+          Edit Poll
+        </CardTitle>
         <CardDescription className="text-gray-600">
           Update your poll question and options
         </CardDescription>
@@ -145,16 +247,19 @@ export default function EditPollForm({ pollId }) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Poll Title */}
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium text-gray-700">
+            <Label
+              htmlFor="title"
+              className="text-sm font-medium text-gray-700"
+            >
               Poll Title *
             </Label>
             <Input
               id="title"
               type="text"
               value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
+              onChange={(e) => handleInputChange("title", e.target.value)}
               placeholder="Enter your poll question"
-              className={errors.title ? 'border-red-500' : ''}
+              className={errors.title ? "border-red-500" : ""}
             />
             {errors.title && (
               <p className="text-sm text-red-600">{errors.title}</p>
@@ -163,17 +268,20 @@ export default function EditPollForm({ pollId }) {
 
           {/* Poll Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium text-gray-700">
+            <Label
+              htmlFor="description"
+              className="text-sm font-medium text-gray-700"
+            >
               Description *
             </Label>
             <textarea
               id="description"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Provide more context about your poll"
               rows={3}
               className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.description ? 'border-red-500' : ''
+                errors.description ? "border-red-500" : ""
               }`}
             />
             {errors.description && (
@@ -199,7 +307,7 @@ export default function EditPollForm({ pollId }) {
                 </Button>
               )}
             </div>
-            
+
             {errors.options && (
               <p className="text-sm text-red-600">{errors.options}</p>
             )}
@@ -212,17 +320,17 @@ export default function EditPollForm({ pollId }) {
                     value={option}
                     onChange={(e) => handleOptionChange(index, e.target.value)}
                     placeholder={`Option ${index + 1}`}
-                    className={`flex-1 ${errors[`option${index}`] ? 'border-red-500' : ''}`}
+                    className={`flex-1 ${errors[`option${index}`] ? "border-red-500" : ""}`}
                   />
                   {formData.options.length > 2 && (
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => removeOption(index)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-red-600 border-red-300 hover:text-red-700 hover:bg-red-50 hover:border-red-400 px-3 py-1"
                     >
-                      Remove
+                      ✕ Remove
                     </Button>
                   )}
                 </div>
@@ -230,10 +338,28 @@ export default function EditPollForm({ pollId }) {
             </div>
           </div>
 
+          {/* Success Message */}
+          {successMessage && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-600">{successMessage}</p>
+            </div>
+          )}
+
           {/* Submit Error */}
           {errors.submit && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-600">{errors.submit}</p>
+            </div>
+          )}
+
+          {/* Info about editing polls with votes */}
+          {poll && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-700">
+                <strong>Note:</strong> If this poll has received votes, only the
+                title and description can be updated to preserve voting
+                integrity.
+              </p>
             </div>
           )}
 
@@ -252,11 +378,11 @@ export default function EditPollForm({ pollId }) {
               disabled={isSubmitting}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2"
             >
-              {isSubmitting ? 'Updating...' : 'Update Poll'}
+              {isSubmitting ? "Updating..." : "Update Poll"}
             </Button>
           </div>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

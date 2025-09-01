@@ -11,12 +11,12 @@ function DashboardPage() {
   const { user } = useAuth()
   const { polls } = usePolls()
 
-  const userPolls = polls.filter(poll => poll.createdBy === user?.id)
+  const userPolls = polls.filter(poll => poll.user_id === user?.id)
   const totalVotes = polls.reduce((sum, poll) => 
-    sum + poll.options.reduce((pollSum, option) => pollSum + option.votes, 0), 0
+    sum + (poll.options?.reduce((pollSum, option) => pollSum + option.votes, 0) || 0), 0
   )
   const userTotalVotes = userPolls.reduce((sum, poll) => 
-    sum + poll.options.reduce((pollSum, option) => pollSum + option.votes, 0), 0
+    sum + (poll.options?.reduce((pollSum, option) => pollSum + option.votes, 0) || 0), 0
   )
 
   return (

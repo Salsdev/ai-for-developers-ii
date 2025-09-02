@@ -234,6 +234,41 @@ export function usePolls() {
     }
   };
 
+  const deletePoll = async (pollId) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (!user) {
+        throw new Error("You must be logged in to delete a poll");
+      }
+
+      // Use API route for deleting polls
+      const response = await fetch(`/api/polls/${pollId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete poll");
+      }
+
+      // Remove the poll from local state
+      setPolls((prev) => prev.filter((poll) => poll.id !== pollId));
+
+      return { success: true, message: data.message };
+    } catch (err) {
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getPollById = (pollId) => {
     return polls.find((poll) => poll.id === pollId);
   };
@@ -250,6 +285,7 @@ export function usePolls() {
     createPoll,
     voteOnPoll,
     editPoll,
+    deletePoll,
     getPollById,
   };
 }

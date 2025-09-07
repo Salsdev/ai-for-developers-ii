@@ -1,6 +1,6 @@
-import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { createServerSupabaseClient } from "@/lib/supabase";
 
 export async function GET(request, { params }) {
   try {
@@ -11,17 +11,7 @@ export async function GET(request, { params }) {
     });
 
     const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      },
-    );
+    const supabase = createServerSupabaseClient(cookieStore);
     const pollId = params.id;
 
     // Get the poll with its options
@@ -91,17 +81,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   try {
     const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      },
-    );
+    const supabase = createServerSupabaseClient(cookieStore);
     const { title, description, options } = await request.json();
     const pollId = params.id;
 
@@ -314,17 +294,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      {
-        cookies: {
-          get(name) {
-            return cookieStore.get(name)?.value;
-          },
-        },
-      },
-    );
+    const supabase = createServerSupabaseClient(cookieStore);
     const pollId = params.id;
 
     // Check if user is authenticated

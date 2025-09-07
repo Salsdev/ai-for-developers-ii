@@ -17,62 +17,53 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function EditPollForm({ pollId }) {
   const router = useRouter();
-  const { editPoll, isLoading } = usePolls();
+  const { editPoll, getPollById, fetchPollById } = usePolls();
   const { user } = useAuth();
+
+  const [poll, setPoll] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     options: ["", ""],
   });
-  const [poll, setPoll] = useState(null);
+
   const [loadingPoll, setLoadingPoll] = useState(true);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
-    const fetchPollData = async () => {
-      try {
-        setLoadingPoll(true);
-        console.log("Fetching poll data for ID:", pollId);
-        const response = await fetch(`/api/polls/${pollId}`);
-        const data = await response.json();
+    const loadPoll = async () => {
+      let pollData = getPollById(pollId);
 
-        console.log("API Response:", data);
+      // If not found in local state, fetch from database
+      if (!pollData) {
+        pollData = await fetchPollById(pollId);
+      }
 
-        if (response.ok && data.success) {
-          const pollData = data.poll;
-          setPoll(pollData);
-
-          // Check if user owns this poll
-          if (pollData.created_by !== user?.id) {
-            setErrors({
-              access: "You do not have permission to edit this poll",
-            });
-            return;
-          }
-
+      if (pollData) {
+        setPoll(pollData);
+        if (pollData.created_by !== user?.id) {
+          setErrors({ access: "You do not have permission to edit this poll" });
+        } else {
           setFormData({
             title: pollData.title,
             description: pollData.description,
-            options: pollData.poll_options?.map((option) => option.text) ||
-              pollData.options?.map((option) => option.text) || ["", ""],
+            options: pollData.options.map((option) => option.text),
           });
-        } else {
-          setErrors({ load: data.error || "Failed to load poll data" });
         }
-      } catch (error) {
-        console.error("Error fetching poll:", error);
-        setErrors({ load: "Failed to load poll data" });
-      } finally {
-        setLoadingPoll(false);
+      } else {
+        setErrors({
+          load: "Poll data not found. Please go back and try again.",
+        });
       }
+      setLoadingPoll(false);
     };
 
     if (pollId && user) {
-      fetchPollData();
+      loadPoll();
     }
-  }, [pollId, user]);
+  }, [pollId, user, getPollById, fetchPollById]);
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

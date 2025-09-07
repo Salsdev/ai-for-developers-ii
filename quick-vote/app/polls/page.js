@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export default function PollsPage() {
-  const { polls, isLoading, error, fetchPolls } = usePolls();
+  const { polls, isLoading, error, fetchPolls, voteOnPoll, deletePoll } =
+    usePolls();
 
   const handleRefresh = async () => {
     await fetchPolls();
@@ -126,7 +127,12 @@ export default function PollsPage() {
             )}
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {polls.map((poll) => (
-                <PollCard key={poll.id} poll={poll} />
+                <PollCard
+                  key={poll.id}
+                  poll={poll}
+                  voteOnPoll={voteOnPoll}
+                  deletePoll={deletePoll}
+                />
               ))}
             </div>
           </>

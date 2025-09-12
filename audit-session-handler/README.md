@@ -10,5 +10,5 @@ This exercise is about auditing an AI-generated session handler.
 
 ## Outcome
 - Documented issues in [`AUDIT.md`](./AUDIT.md).
-- Wrote a fixed version in [`secureHandler.js`](./secureHandler.js).
+- Wrote a fixed version in [`fixedSessionHandler.js`](./fixedSessionHandler.js).
 
